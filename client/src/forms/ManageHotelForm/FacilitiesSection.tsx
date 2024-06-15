@@ -9,14 +9,18 @@ const FacilitiesSection = () => {
   } = useFormContext<HotelFormData>();
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-3">Facilities</h2>
-      <div className="grid grid-cols-5 gap-3">
+    <div className="p-4 bg-white rounded shadow-md">
+     <h2 className="text-2xl font-bold mb-3 relative border-b-2 border-blue-600">
+  Facilities
+  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600"></div>
+</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {hotelFacilities.map((facility) => (
-          <label className="text-sm flex gap-1 text-gray-700">
+          <label key={facility} className="flex items-center gap-2 text-gray-700">
             <input
               type="checkbox"
               value={facility}
+              className="checkbox checkbox-primary"
               {...register("facilities", {
                 validate: (facilities) => {
                   if (facilities && facilities.length > 0) {
@@ -27,12 +31,12 @@ const FacilitiesSection = () => {
                 },
               })}
             />
-            {facility}
+            <span className="text-sm">{facility}</span>
           </label>
         ))}
       </div>
       {errors.facilities && (
-        <span className="text-red-500 text-sm font-bold">
+        <span className="text-error text-sm font-bold">
           {errors.facilities.message}
         </span>
       )}

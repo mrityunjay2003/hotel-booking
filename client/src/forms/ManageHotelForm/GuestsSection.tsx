@@ -8,41 +8,48 @@ const GuestsSection = () => {
   } = useFormContext<HotelFormData>();
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-3">Guests</h2>
-      <div className="grid grid-cols-2 p-6 gap-5 bg-gray-300">
-        <label className="text-gray-700 text-sm font-semibold">
-          Adults
+    <div className="p-4 bg-white rounded shadow-md">
+     <h2 className="text-2xl font-bold mb-3 relative border-b-2 border-blue-600">
+  Guests
+  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600"></div>
+</h2>
+      <div className="grid grid-cols-2 gap-5">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-semibold">Adults</span>
+          </label>
           <input
-            className="border rounded w-full py-2 px-3 font-normal"
+            className={`input input-bordered ${errors.adultCount ? 'input-error' : ''}`}
             type="number"
             min={1}
             {...register("adultCount", {
               required: "This field is required",
             })}
           />
-          {errors.adultCount?.message && (
-            <span className="text-red-500 text-sm fold-bold">
-              {errors.adultCount?.message}
+          {errors.adultCount && (
+            <span className="text-error text-sm font-bold">
+              {errors.adultCount.message}
             </span>
           )}
-        </label>
-        <label className="text-gray-700 text-sm font-semibold">
-          Children
+        </div>
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-semibold">Children</span>
+          </label>
           <input
-            className="border rounded w-full py-2 px-3 font-normal"
+            className={`input input-bordered ${errors.childCount ? 'input-error' : ''}`}
             type="number"
             min={0}
             {...register("childCount", {
               required: "This field is required",
             })}
           />
-          {errors.childCount?.message && (
-            <span className="text-red-500 text-sm fold-bold">
-              {errors.childCount?.message}
+          {errors.childCount && (
+            <span className="text-error text-sm font-bold">
+              {errors.childCount.message}
             </span>
           )}
-        </label>
+        </div>
       </div>
     </div>
   );

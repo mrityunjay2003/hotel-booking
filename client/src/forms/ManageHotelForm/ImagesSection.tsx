@@ -23,17 +23,20 @@ const ImagesSection = () => {
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-3">Images</h2>
+    <div className="p-4 bg-white rounded shadow-md">
+      <h2 className="text-2xl font-bold mb-3 relative border-b-2 border-blue-600">
+  Images
+  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600"></div>
+</h2>
       <div className="border rounded p-4 flex flex-col gap-4">
         {existingImageUrls && (
-          <div className="grid grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {existingImageUrls.map((url) => (
-              <div className="relative group">
-                <img src={url} className="min-h-full object-cover" />
+              <div key={url} className="relative group">
+                <img src={url} className="min-h-full object-cover rounded" />
                 <button
                   onClick={(event) => handleDelete(event, url)}
-                  className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 text-white"
+                  className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 text-white rounded"
                 >
                   Delete
                 </button>
@@ -46,7 +49,7 @@ const ImagesSection = () => {
           type="file"
           multiple
           accept="image/*"
-          className="w-full text-gray-700 font-normal"
+          className={`input input-bordered ${errors.imageFiles ? 'input-error' : ''}`}
           {...register("imageFiles", {
             validate: (imageFiles) => {
               const totalLength =
@@ -66,7 +69,7 @@ const ImagesSection = () => {
         />
       </div>
       {errors.imageFiles && (
-        <span className="text-red-500 text-sm font-bold">
+        <span className="text-error text-sm font-bold">
           {errors.imageFiles.message}
         </span>
       )}
