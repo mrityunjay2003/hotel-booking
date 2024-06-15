@@ -64,7 +64,6 @@ export const signOut = async () => {
 
 export const addMyHotel = async (hotelFormData: FormData) => {
   console.log(hotelFormData);
-
   const formDataObject: any = Object.fromEntries(hotelFormData);
 
   formDataObject.facilities = [];
@@ -77,7 +76,6 @@ export const addMyHotel = async (hotelFormData: FormData) => {
       formDataObject.imageUrls.push(value);
     }
   }
-
   const response = await fetch(`${API_BASE_URL}/api/my-hotels`, {
     method: "POST",
     credentials: "include",
