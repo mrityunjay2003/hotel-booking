@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useAppContext } from "./contexts/AppContext";
 import Layout from "./layouts/Layout";
 import AddHotel from "./pages/AddHotel";
+import EditHotel from "./pages/EditHotel";
 import MyHotels from "./pages/MyHotels";
 import Register from "./pages/Register";
 import SignIn from "./pages/SignIn";
@@ -48,8 +49,12 @@ const App = () => {
       ),
     },
     {
-      path: "/edit-hotel/:id",
-      element: <div>edit here</div>,
+      path: "/edit-hotel/:hotelId",
+      element: (
+        <Layout>
+          <EditHotel />
+        </Layout>
+      ),
     },
   ]);
   return <RouterProvider router={router} />;
