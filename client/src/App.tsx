@@ -4,6 +4,7 @@ import Layout from "./layouts/Layout";
 import AddHotel from "./pages/AddHotel";
 import Register from "./pages/Register";
 import SignIn from "./pages/SignIn";
+import MyHotels from "./pages/MyHotels";
 
 const App = () => {
   const { isLoggedIn } = useAppContext();
@@ -34,6 +35,15 @@ const App = () => {
       element: isLoggedIn && (
         <Layout>
           <AddHotel />
+        </Layout>
+      ),
+    },
+
+    {
+      path: "/my-hotels",
+      element: isLoggedIn && (
+        <Layout>
+          <MyHotels />
         </Layout>
       ),
     },
