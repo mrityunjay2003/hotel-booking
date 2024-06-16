@@ -2,9 +2,9 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useAppContext } from "./contexts/AppContext";
 import Layout from "./layouts/Layout";
 import AddHotel from "./pages/AddHotel";
+import MyHotels from "./pages/MyHotels";
 import Register from "./pages/Register";
 import SignIn from "./pages/SignIn";
-import MyHotels from "./pages/MyHotels";
 
 const App = () => {
   const { isLoggedIn } = useAppContext();
@@ -46,6 +46,10 @@ const App = () => {
           <MyHotels />
         </Layout>
       ),
+    },
+    {
+      path: "/edit-hotel/:id",
+      element: <div>edit here</div>,
     },
   ]);
   return <RouterProvider router={router} />;
