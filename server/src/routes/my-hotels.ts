@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post("/", verifyToken, async (req: Request, res: Response) => {
   try {
-    console.log(req.body);
+    
     const newHotel: HotelType = req.body;
     newHotel.lastUpdated = new Date();
     newHotel.userId = req.userId as string;
@@ -22,5 +22,20 @@ router.post("/", verifyToken, async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server Error" });
   }
 });
+
+router.get("/",
+  verifyToken,
+ async(req: Request, res: Response) => {
+  
+  try {
+    const hotels = await Hotel.find({userId: req.userId});
+      res.json(hotels);
+
+  }
+  catch(error) {
+    res.status(500).json({message:"Error fetching hotels"});
+  }
+ } 
+)
 
 export default router;
