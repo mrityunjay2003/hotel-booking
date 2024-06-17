@@ -7,7 +7,7 @@ import path from "path";
 import authRoutes from "./routes/auth";
 import myHotelRoutes from "./routes/my-hotels";
 import userRoutes from "./routes/users";
-
+import hotelRoutes from "./routes/hotels"
 mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string);
 const app = express();
 
@@ -28,6 +28,7 @@ app.use(express.static(path.join(__dirname, "../../client/dist")));
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/my-hotels", myHotelRoutes);
+app.use("/api/hotels", hotelRoutes);
 
 app.listen(3000, () => {
   console.log("Server is running on Port: " + 3000);
