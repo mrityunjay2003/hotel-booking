@@ -8,25 +8,22 @@ const EditHotel = () => {
 
   const { data: hotel } = useQuery(
     "fetchMyHotelById",
-    () => 
-      apiClient.fetchMyHotelsById(hotelId || ""),
-        {
-          enabled: !!hotelId,
-        }
-    
-    
+    () => apiClient.fetchMyHotelsById(hotelId || ""),
+    {
+      enabled: !!hotelId,
+    }
   );
 
-  const {mutate, isLoading} = useMutation(apiClient.updateMyHotelById, {
+  const { mutate, isLoading } = useMutation(apiClient.updateMyHotelById, {
     onSuccess: () => {},
     onError: () => {},
-
   });
-  const handleSave = (hotelFormData: FormData) =>
-  {
-    mutate(hotelFormData)
-  }
-  return <ManageHotelForm hotel={hotel} onSave={handleSave} isLoading = {isLoading} />;
+  const handleSave = (hotelFormData: FormData) => {
+    mutate(hotelFormData);
+  };
+  return (
+    <ManageHotelForm hotel={hotel} onSave={handleSave} isLoading={isLoading} />
+  );
 };
 
 export default EditHotel;
