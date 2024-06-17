@@ -44,4 +44,33 @@ router.get("/:id", verifyToken, async (req: Request, res: Response) => {
   }
 });
 
+router.put(
+  "/:hotelId",
+  verifyToken, 
+  async (req: Request, res: Response) => {
+    try {
+      const updatedHotel: HotelType = req.body;
+      updatedHotel.lastUpdated = new Date();
+
+      const hotel = await Hotel.findOneAndUpdate(
+        {
+          _id: req.params.hotelId,
+          userId: req.userId,
+        },
+        updatedHotel,
+        { new: true }
+      );
+      if (!hotel) {
+        return res.status(404).json({ message: "Hotel not found" });
+      }    
+
+      await hotel.save();
+      res.status(201).json(hotel);
+    } catch (error) {
+      res.status(500).json({ message: "Something went throw" });
+    }
+  }
+);
+
+
 export default router;
