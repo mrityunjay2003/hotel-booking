@@ -5,6 +5,7 @@ import AddHotel from "./pages/AddHotel";
 import EditHotel from "./pages/EditHotel";
 import MyHotels from "./pages/MyHotels";
 import Register from "./pages/Register";
+import Search from "./pages/Search";
 import SignIn from "./pages/SignIn";
 
 const App = () => {
@@ -53,6 +54,14 @@ const App = () => {
       element: (
         <Layout>
           <EditHotel />
+        </Layout>
+      ),
+    },
+    {
+      path: "/search",
+      element: (
+        <Layout>
+          <Search />
         </Layout>
       ),
     },

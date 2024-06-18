@@ -1,9 +1,14 @@
 import { FormEvent, useState } from "react";
-import { useSearchContext } from "../contexts/SearchContext";
-import { MdTravelExplore, MdSearch, MdExpandMore, MdDelete } from "react-icons/md";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import {
+  MdDelete,
+  MdExpandMore,
+  MdSearch,
+  MdTravelExplore,
+} from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import { useSearchContext } from "../contexts/SearchContext";
 
 const SearchBar = () => {
   const navigate = useNavigate();
@@ -87,7 +92,9 @@ const SearchBar = () => {
                 min={1}
                 max={20}
                 value={adultCount}
-                onChange={(event) => setAdultCount(parseInt(event.target.value))}
+                onChange={(event) =>
+                  setAdultCount(parseInt(event.target.value))
+                }
               />
             </label>
             <label className="flex items-center text-gray-600">
@@ -98,7 +105,9 @@ const SearchBar = () => {
                 min={0}
                 max={20}
                 value={childCount}
-                onChange={(event) => setChildCount(parseInt(event.target.value))}
+                onChange={(event) =>
+                  setChildCount(parseInt(event.target.value))
+                }
               />
             </label>
           </div>
