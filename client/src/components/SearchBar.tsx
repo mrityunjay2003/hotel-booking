@@ -44,7 +44,7 @@ const SearchBar = () => {
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() + 1);
 
-  // Check if any input field has non-empty values
+ 
   const isInputNotEmpty =
     destination ||
     checkIn !== search.checkIn ||
