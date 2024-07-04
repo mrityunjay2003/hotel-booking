@@ -13,7 +13,7 @@ mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string);
 const app = express();
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: process.env.FRONTEND_URL ,
   credentials: true,
 };
 app.use(cors(corsOptions));
@@ -31,9 +31,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/my-hotels", myHotelRoutes);
 app.use("/api/hotels", hotelRoutes);
 
-app.get("*", (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, "../../client/dist/index.html"));
-});
+// app.get("*", (req: Request, res: Response) => {
+//   res.sendFile(path.join(__dirname, "../../client/dist/index.html"));
+// });
 
 app.listen(port, () => {
   console.log("Server is running on Port: " + port);
