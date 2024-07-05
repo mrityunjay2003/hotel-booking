@@ -13,7 +13,7 @@ mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string);
 const app = express();
 
 const corsOptions = {
-  origin: process.env.FRONTEND_URL ,
+  origin: process.env.FRONTEND_URL,
   credentials: true,
 };
 app.use(cors(corsOptions));
@@ -22,10 +22,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/api", async (req: Request, res: Response) => {
-  res.json({ message: "Hello this is a test" });
+  res.json({ message: "API is working" });
 });
 
-app.use(express.static(path.join(__dirname, "../../client/dist")));
+// app.use(express.static(path.join(__dirname, "../../client/dist")));
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/my-hotels", myHotelRoutes);
