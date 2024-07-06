@@ -1,17 +1,19 @@
+import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { StripeCardElement } from "@stripe/stripe-js";
 import { useForm } from "react-hook-form";
 import { useMutation } from "react-query";
 import { useParams } from "react-router-dom";
-import { PaymentIntentResponse, UserType } from "../../../../server/src/shared/types";
+import {
+  PaymentIntentResponse,
+  UserType,
+} from "../../../../server/src/shared/types";
 import * as apiClient from "../../api-client";
 import { useAppContext } from "../../contexts/AppContext";
 import { useSearchContext } from "../../contexts/SearchContext";
-import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import stripe from "stripe";
-import { StripeCardElement } from "@stripe/stripe-js";
 
 type Props = {
-  currentUser: UserType ;
-  paymentIntent: PaymentIntentResponse
+  currentUser: UserType;
+  paymentIntent: PaymentIntentResponse;
 };
 
 export type BookingFormData = {
@@ -120,7 +122,9 @@ const BookingForm = ({ currentUser, paymentIntent }: Props) => {
         <h2 className="text-xl font-semibold">Your Price Summary</h2>
 
         <div className="bg-blue-200 p-4 rounded-md">
-          <div className="font-semibold text-lg">Total Cost: ₹{paymentIntent.totalCost.toFixed(2)}</div>
+          <div className="font-semibold text-lg">
+            Total Cost: ₹{paymentIntent.totalCost.toFixed(2)}
+          </div>
           <div className="text-xs">Includes taxes and charges</div>
         </div>
       </div>
