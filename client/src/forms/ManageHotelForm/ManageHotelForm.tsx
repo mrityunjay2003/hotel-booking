@@ -35,7 +35,9 @@ const ManageHotelForm = ({ onSave, isLoading, hotel }: Props) => {
   const { handleSubmit, reset } = formMethods;
 
   useEffect(() => {
-    reset(hotel);
+    if (hotel) {
+      reset(hotel);
+    }
   }, [hotel, reset]);
 
   const uploadImagesToFirebase = async (imageFiles: FileList) => {
@@ -82,6 +84,7 @@ const ManageHotelForm = ({ onSave, isLoading, hotel }: Props) => {
         formData.append(`imageUrls[${index}]`, url);
       });
     }
+
     onSave(formData);
   });
 

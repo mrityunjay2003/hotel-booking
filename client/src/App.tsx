@@ -2,6 +2,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useAppContext } from "./contexts/AppContext";
 import Layout from "./layouts/Layout";
 import AddHotel from "./pages/AddHotel";
+import Booking from "./pages/Booking";
+import Detail from "./pages/Detail";
 import EditHotel from "./pages/EditHotel";
 import MyHotels from "./pages/MyHotels";
 import Register from "./pages/Register";
@@ -62,6 +64,22 @@ const App = () => {
       element: (
         <Layout>
           <Search />
+        </Layout>
+      ),
+    },
+    {
+      path: "/detail/:hotelId",
+      element: (
+        <Layout>
+          <Detail />
+        </Layout>
+      ),
+    },
+    {
+      path: "/hotel/:hotelId/booking",
+      element: (
+        <Layout>
+          <Booking />
         </Layout>
       ),
     },
