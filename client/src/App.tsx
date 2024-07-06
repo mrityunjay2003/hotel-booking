@@ -5,6 +5,8 @@ import AddHotel from "./pages/AddHotel";
 import Booking from "./pages/Booking";
 import Detail from "./pages/Detail";
 import EditHotel from "./pages/EditHotel";
+import Home from "./pages/Home";
+import MyBookings from "./pages/MyBookings";
 import MyHotels from "./pages/MyHotels";
 import Register from "./pages/Register";
 import Search from "./pages/Search";
@@ -16,7 +18,11 @@ const App = () => {
     {
       path: "/",
 
-      element: <Layout>Home Page</Layout>,
+      element: (
+        <Layout>
+          <Home />
+        </Layout>
+      ),
     },
     {
       path: "/sign-in",
@@ -44,6 +50,14 @@ const App = () => {
     },
 
     {
+      path: "/my-bookings",
+      element: isLoggedIn && (
+        <Layout>
+          <MyBookings />
+        </Layout>
+      ),
+    },
+    {
       path: "/my-hotels",
       element: isLoggedIn && (
         <Layout>
@@ -53,7 +67,7 @@ const App = () => {
     },
     {
       path: "/edit-hotel/:hotelId",
-      element: (
+      element: isLoggedIn && (
         <Layout>
           <EditHotel />
         </Layout>
@@ -77,7 +91,7 @@ const App = () => {
     },
     {
       path: "/hotel/:hotelId/booking",
-      element: (
+      element: isLoggedIn && (
         <Layout>
           <Booking />
         </Layout>
