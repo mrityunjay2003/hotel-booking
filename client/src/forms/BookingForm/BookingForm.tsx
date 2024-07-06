@@ -1,13 +1,17 @@
 import { useForm } from "react-hook-form";
 import { useMutation } from "react-query";
 import { useParams } from "react-router-dom";
-import { UserType } from "../../../../server/src/shared/types";
+import { PaymentIntentResponse, UserType } from "../../../../server/src/shared/types";
 import * as apiClient from "../../api-client";
 import { useAppContext } from "../../contexts/AppContext";
 import { useSearchContext } from "../../contexts/SearchContext";
+import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import stripe from "stripe";
+import { StripeCardElement } from "@stripe/stripe-js";
 
 type Props = {
-  currentUser: UserType;
+  currentUser: UserType ;
+  paymentIntent: PaymentIntentResponse
 };
 
 export type BookingFormData = {
@@ -20,12 +24,14 @@ export type BookingFormData = {
   checkOut: string;
   hotelId: string;
   totalCost: number;
+  paymentIntentId: string;
 };
 
-const BookingForm = ({ currentUser }: Props) => {
+const BookingForm = ({ currentUser, paymentIntent }: Props) => {
   const search = useSearchContext();
   const { hotelId } = useParams();
-
+  const stripe = useStripe();
+  const elements = useElements();
   const { showToast } = useAppContext();
 
   const { mutate: bookRoom, isLoading } = useMutation(
@@ -50,12 +56,25 @@ const BookingForm = ({ currentUser }: Props) => {
       checkIn: search.checkIn.toISOString(),
       checkOut: search.checkOut.toISOString(),
       hotelId: hotelId,
-      totalCost: 0,
+      totalCost: paymentIntent.totalCost,
+      paymentIntentId: paymentIntent.paymentIntentId,
     },
   });
 
   const onSubmit = async (formData: BookingFormData) => {
-    bookRoom(formData);
+    if (!stripe || !elements) {
+      return;
+    }
+
+    const result = await stripe.confirmCardPayment(paymentIntent.clientSecret, {
+      payment_method: {
+        card: elements.getElement(CardElement) as StripeCardElement,
+      },
+    });
+
+    if (result.paymentIntent?.status === "succeeded") {
+      bookRoom({ ...formData, paymentIntentId: result.paymentIntent.id });
+    }
   };
 
   return (
@@ -101,9 +120,17 @@ const BookingForm = ({ currentUser }: Props) => {
         <h2 className="text-xl font-semibold">Your Price Summary</h2>
 
         <div className="bg-blue-200 p-4 rounded-md">
-          <div className="font-semibold text-lg">Total Cost: £</div>
+          <div className="font-semibold text-lg">Total Cost: ₹{paymentIntent.totalCost.toFixed(2)}</div>
           <div className="text-xs">Includes taxes and charges</div>
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="text-xl font-semibold"> Payment Details</h3>
+        <CardElement
+          id="payment-element"
+          className="border rounded-md p-2 text-sm"
+        />
       </div>
 
       <div className="flex justify-end">

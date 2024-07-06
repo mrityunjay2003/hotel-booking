@@ -38,7 +38,6 @@ const Search = () => {
 
   const handleStarsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const starRating = event.target.value;
-
     setSelectedStars((prevStars) =>
       event.target.checked
         ? [...prevStars, starRating]
@@ -46,11 +45,8 @@ const Search = () => {
     );
   };
 
-  const handleHotelTypeChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleHotelTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const hotelType = event.target.value;
-
     setSelectedHotelTypes((prevHotelTypes) =>
       event.target.checked
         ? [...prevHotelTypes, hotelType]
@@ -60,7 +56,6 @@ const Search = () => {
 
   const handleFacilityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const facility = event.target.value;
-
     setSelectedFacilities((prevFacilities) =>
       event.target.checked
         ? [...prevFacilities, facility]
@@ -106,16 +101,12 @@ const Search = () => {
           >
             <option value="">Sort By</option>
             <option value="starRating">Star Rating</option>
-            <option value="pricePerNightAsc">
-              Price Per Night (low to high)
-            </option>
-            <option value="pricePerNightDesc">
-              Price Per Night (high to low)
-            </option>
+            <option value="pricePerNightAsc">Price Per Night (low to high)</option>
+            <option value="pricePerNightDesc">Price Per Night (high to low)</option>
           </select>
         </div>
         {hotelData?.data.map((hotel) => (
-          <SearchResultsCard hotel={hotel} />
+          <SearchResultsCard key={hotel._id} hotel={hotel} />
         ))}
         <div>
           <Pagination

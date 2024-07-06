@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useSearchContext } from "../contexts/SearchContext";
 
 const SearchBar = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); //use navigate hook
   const search = useSearchContext();
 
   const [destination, setDestination] = useState<string>(search.destination);
@@ -49,7 +49,7 @@ const SearchBar = () => {
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() + 1);
 
-  // Check if any input field has non-empty values
+ 
   const isInputNotEmpty =
     destination ||
     checkIn !== search.checkIn ||
