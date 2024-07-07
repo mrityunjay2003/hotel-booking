@@ -16,7 +16,6 @@ export const verifyToken = (
   next: NextFunction
 ) => {
   const token = req.cookies["auth_token"];
-
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -31,7 +30,6 @@ export const verifyToken = (
   } catch (error) {
     console.error("Token verification error:", error);
     return res.status(401).json({ message: "Unauthorized" });
- 
   }
 };
 
