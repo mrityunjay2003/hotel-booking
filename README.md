@@ -1,3 +1,9 @@
-## This is a ReadMe file.
+## A fullstack Hotel Booking Site
 
-### This is a subtitle.
+-Allows user to book and search for hotels.
+
+-Allows them to sort and arrange the hotels according to their choice
+
+-Authentication provided for security.
+
+-Beautiful UI.
