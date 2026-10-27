@@ -10,7 +10,7 @@ const DetailsSection = () => {
   return (
     <div className="flex flex-col gap-4 p-4 bg-white rounded shadow-md relative">
       <h1 className="text-2xl font-bold mb-3 relative text-center">
-        <span className="inline-block pb-1 border-b-4 border-blue-600">ADD HOTEL</span>
+        <span className="inline-block pb-1 border-b-4 border-blue-600">Hotel Details</span>
       </h1>
       
       <div className="form-control">
@@ -84,7 +84,11 @@ const DetailsSection = () => {
           min={1}
           placeholder="Enter price per night"
           className={`input input-bordered ${errors.pricePerNight ? 'input-error' : ''}`}
-          {...register("pricePerNight", { required: "This field is required" })}
+          {...register("pricePerNight", {
+            required: "This field is required",
+            min: { value: 1, message: "Price must be at least ₹1" },
+            valueAsNumber: true,
+          })}
         />
         {errors.pricePerNight && (
           <span className="text-error mt-1">{errors.pricePerNight.message}</span>
@@ -96,7 +100,10 @@ const DetailsSection = () => {
           <span className="label-text font-bold">Star Rating</span>
         </label>
         <select
-          {...register("starRating", { required: "This field is required" })}
+          {...register("starRating", {
+            required: "This field is required",
+            valueAsNumber: true,
+          })}
           className={`select select-bordered ${errors.starRating ? 'select-error' : ''}`}
         >
           <option value="" disabled>Select a rating</option>

@@ -24,6 +24,8 @@ const GuestsSection = () => {
             min={1}
             {...register("adultCount", {
               required: "This field is required",
+              min: { value: 1, message: "At least 1 adult is required" },
+              valueAsNumber: true,
             })}
           />
           {errors.adultCount && (
@@ -42,6 +44,8 @@ const GuestsSection = () => {
             min={0}
             {...register("childCount", {
               required: "This field is required",
+              min: { value: 0, message: "Children cannot be negative" },
+              valueAsNumber: true,
             })}
           />
           {errors.childCount && (

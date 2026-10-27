@@ -17,8 +17,8 @@ const SearchBar = () => {
   const [destination, setDestination] = useState<string>(search.destination);
   const [checkIn, setCheckIn] = useState<Date>(search.checkIn);
   const [checkOut, setCheckOut] = useState<Date>(search.checkOut);
-  const [adultCount, setAdultCount] = useState<number>(0); // Initial value set to 0
-  const [childCount, setChildCount] = useState<number>(0); // Initial value set to 0
+  const [adultCount, setAdultCount] = useState<number>(search.adultCount || 1);
+  const [childCount, setChildCount] = useState<number>(search.childCount || 0);
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
   const handleSubmit = (event: FormEvent) => {
@@ -34,10 +34,14 @@ const SearchBar = () => {
   };
 
   const handleClear = () => {
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
     setDestination("");
-    setCheckIn(new Date());
-    setCheckOut(new Date());
-    setAdultCount(0);
+    setCheckIn(today);
+    setCheckOut(tomorrow);
+    setAdultCount(1);
     setChildCount(0);
   };
 

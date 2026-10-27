@@ -1,19 +1,91 @@
 import express, { Request, Response } from "express";
 import { param, validationResult } from "express-validator";
+import mongoose from "mongoose";
 import Stripe from "stripe";
-import { toEditorSettings } from "typescript";
 import verifyToken from "../middleware/auth";
 import Hotel from "../models/hotel";
 import { BookingType, HotelSearchResponse } from "../shared/types";
+
 const router = express.Router();
 
-const stripe = new Stripe(process.env.STRIPE_API_KEY as string);
+const stripe = new Stripe(process.env.STRIPE_API_KEY || "sk_test_placeholder_key");
+
+// Helper function to escape user input for safe regular expressions (prevents ReDoS)
+const escapeRegex = (text: string) => {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+};
+
+const constructSearchQuery = (queryParams: any) => {
+  let constructedQuery: any = {};
+
+  if (queryParams.destination && typeof queryParams.destination === "string" && queryParams.destination.trim()) {
+    const safeDestination = escapeRegex(queryParams.destination.trim());
+    constructedQuery.$or = [
+      { city: new RegExp(safeDestination, "i") },
+      { country: new RegExp(safeDestination, "i") },
+    ];
+  }
+
+  if (queryParams.adultCount) {
+    const adults = parseInt(queryParams.adultCount, 10);
+    if (!isNaN(adults) && adults > 0) {
+      constructedQuery.adultCount = { $gte: adults };
+    }
+  }
+
+  if (queryParams.childCount) {
+    const children = parseInt(queryParams.childCount, 10);
+    if (!isNaN(children) && children >= 0) {
+      constructedQuery.childCount = { $gte: children };
+    }
+  }
+
+  if (queryParams.facilities) {
+    const facilitiesArray = Array.isArray(queryParams.facilities)
+      ? queryParams.facilities
+      : [queryParams.facilities];
+    constructedQuery.facilities = {
+      $all: facilitiesArray,
+    };
+  }
+
+  if (queryParams.types) {
+    const typesArray = Array.isArray(queryParams.types)
+      ? queryParams.types
+      : [queryParams.types];
+    constructedQuery.type = {
+      $in: typesArray,
+    };
+  }
+
+  if (queryParams.stars) {
+    const starsArray = Array.isArray(queryParams.stars)
+      ? queryParams.stars
+      : [queryParams.stars];
+    const parsedStars = starsArray
+      .map((star: any) => parseInt(star, 10))
+      .filter((n: number) => !isNaN(n) && n >= 1 && n <= 5);
+
+    if (parsedStars.length > 0) {
+      constructedQuery.starRating = { $in: parsedStars };
+    }
+  }
+
+  if (queryParams.maxPrice) {
+    const maxPrice = parseInt(queryParams.maxPrice, 10);
+    if (!isNaN(maxPrice) && maxPrice > 0) {
+      constructedQuery.pricePerNight = { $lte: maxPrice };
+    }
+  }
+
+  return constructedQuery;
+};
 
 router.get("/search", async (req: Request, res: Response) => {
   try {
     const query = constructSearchQuery(req.query);
 
-    let sortOptions = {};
+    let sortOptions: any = {};
     switch (req.query.sortOption) {
       case "starRating":
         sortOptions = { starRating: -1 };
@@ -24,54 +96,74 @@ router.get("/search", async (req: Request, res: Response) => {
       case "pricePerNightDesc":
         sortOptions = { pricePerNight: -1 };
         break;
+      default:
+        sortOptions = { lastUpdated: -1 };
     }
 
     const pageSize = 5;
-    const pageNumber = parseInt(
-      req.query.page ? req.query.page.toString() : "1"
+    const pageNumber = Math.max(
+      1,
+      parseInt(req.query.page ? req.query.page.toString() : "1", 10) || 1
     );
     const skip = (pageNumber - 1) * pageSize;
 
-    const hotels = await Hotel.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(pageSize);
-
-    const total = await Hotel.countDocuments(query);
+    const [hotels, total] = await Promise.all([
+      Hotel.find(query)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(pageSize),
+      Hotel.countDocuments(query),
+    ]);
 
     const response: HotelSearchResponse = {
       data: hotels,
       pagination: {
         total,
         page: pageNumber,
-        pages: Math.ceil(total / pageSize),
+        pages: Math.ceil(total / pageSize) || 1,
       },
     };
 
-    res.json(response);
+    return res.status(200).json(response);
   } catch (error) {
-    console.log("error", error);
-    res.status(500).json({ message: "Something went wrong" });
+    console.error("Hotel search error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+});
+
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const hotels = await Hotel.find().sort({ lastUpdated: -1 });
+    return res.status(200).json(hotels);
+  } catch (error) {
+    console.error("Error fetching hotels:", error);
+    return res.status(500).json({ message: "Error fetching hotels" });
   }
 });
 
 router.get(
   "/:id",
-  [param("id").notEmpty().withMessage("Hotel ID is required")],
+  [param("id").trim().notEmpty().withMessage("Hotel ID is required")],
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const id = req.params.id.toString();
+    const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Hotel ID format" });
+    }
 
     try {
       const hotel = await Hotel.findById(id);
-      res.json(hotel);
+      if (!hotel) {
+        return res.status(404).json({ message: "Hotel not found" });
+      }
+      return res.status(200).json(hotel);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Error fetching hotel" });
+      console.error("Error fetching hotel by id:", error);
+      return res.status(500).json({ message: "Error fetching hotel" });
     }
   }
 );
@@ -80,37 +172,51 @@ router.post(
   "/:hotelId/bookings/payment-intent",
   verifyToken,
   async (req: Request, res: Response) => {
-    const { numberOfNights } = req.body;
-    const hotelId = req.params.hotelId;
+    try {
+      const { numberOfNights } = req.body;
+      const hotelId = req.params.hotelId;
 
-    const hotel = await Hotel.findById(hotelId);
+      const parsedNights = parseInt(numberOfNights, 10);
+      if (isNaN(parsedNights) || parsedNights <= 0) {
+        return res.status(400).json({ message: "Valid number of nights is required" });
+      }
 
-    if (!hotel) {
-      return res.status(400).json({ message: "Hotel Not Found!" });
+      if (!mongoose.Types.ObjectId.isValid(hotelId)) {
+        return res.status(400).json({ message: "Invalid Hotel ID format" });
+      }
+
+      const hotel = await Hotel.findById(hotelId);
+      if (!hotel) {
+        return res.status(404).json({ message: "Hotel Not Found" });
+      }
+
+      const totalCost = hotel.pricePerNight * parsedNights;
+      const validUserId = req.userId || "";
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(totalCost * 100), // in paise / cents
+        currency: "inr",
+        metadata: {
+          hotelId,
+          userId: validUserId,
+        },
+      });
+
+      if (!paymentIntent.client_secret) {
+        return res.status(500).json({ message: "Error creating payment intent" });
+      }
+
+      const response = {
+        paymentIntentId: paymentIntent.id,
+        clientSecret: paymentIntent.client_secret,
+        totalCost,
+      };
+
+      return res.status(200).json(response);
+    } catch (error) {
+      console.error("Payment intent creation error:", error);
+      return res.status(500).json({ message: "Failed to initialize payment" });
     }
-
-    const totalCost = hotel.pricePerNight * numberOfNights;
-    const userId: string | undefined = req.userId; //chatgpt
-    const validUserId: string = userId !== undefined ? userId : "null"; //chatgpt was done to fit the stripe userid format
-
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: totalCost * 100,
-      currency: "inr",
-      metadata: {
-        hotelId,
-        userId: validUserId,
-      },
-    });
-
-    if (!paymentIntent.client_secret) {
-      return res.status(500).json({ message: "Error creating payment intent" });
-    }
-    const response = {
-      paymentIntent: paymentIntent.id,
-      clientSecret: paymentIntent.client_secret.toString(),
-      totalCost,
-    };
-    res.send(response);
   }
 );
 
@@ -119,113 +225,87 @@ router.post(
   verifyToken,
   async (req: Request, res: Response) => {
     try {
-      const paymentIntentId = req.body.paymentIntentId;
-      const paymentIntent = await stripe.paymentIntents.retrieve(
-        paymentIntentId as string
-      );
+      const {
+        paymentIntentId,
+        firstName,
+        lastName,
+        email,
+        adultCount,
+        childCount,
+        checkIn,
+        checkOut,
+        totalCost,
+      } = req.body;
+
+      const hotelId = req.params.hotelId;
+
+      if (!mongoose.Types.ObjectId.isValid(hotelId)) {
+        return res.status(400).json({ message: "Invalid Hotel ID format" });
+      }
+
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: "Payment Intent ID is required" });
+      }
+
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       if (!paymentIntent) {
-        return res.status(400).json({ message: "payment intent not found" });
+        return res.status(400).json({ message: "Payment intent not found" });
       }
 
       if (
-        paymentIntent.metadata.hotelId !== req.params.hotelId ||
+        paymentIntent.metadata.hotelId !== hotelId ||
         paymentIntent.metadata.userId !== req.userId
       ) {
-        return res.status(400).json({ messsage: "payment intent mismatch!" });
+        return res.status(400).json({ message: "Payment intent mismatch" });
       }
 
       if (paymentIntent.status !== "succeeded") {
         return res.status(400).json({
-          message: `payment intent not succeeded Staus: ${paymentIntent.status}`,
+          message: `Payment has not succeeded. Status: ${paymentIntent.status}`,
         });
       }
 
+      // Check for replay attacks: prevent duplicate bookings for the same payment intent
+      const existingBooking = await Hotel.findOne({
+        _id: hotelId,
+        "bookings.paymentIntentId": paymentIntentId,
+      });
+
+      if (existingBooking) {
+        return res.status(400).json({ message: "This payment has already been applied to a booking" });
+      }
+
       const newBooking: BookingType = {
-        ...req.body,
-        userId: req.userId,
+        _id: new mongoose.Types.ObjectId().toString(),
+        userId: req.userId as string,
+        firstName: String(firstName).trim(),
+        lastName: String(lastName).trim(),
+        email: String(email).trim().toLowerCase(),
+        adultCount: Number(adultCount) || 1,
+        childCount: Number(childCount) || 0,
+        checkIn: new Date(checkIn),
+        checkOut: new Date(checkOut),
+        totalCost: Number(totalCost),
       };
 
       const hotel = await Hotel.findOneAndUpdate(
-        { _id: req.params.hotelId },
+        { _id: hotelId },
         {
           $push: { bookings: newBooking },
-        }
+        },
+        { new: true }
       );
+
       if (!hotel) {
-        return res.status(400).json({ message: "hotel note found" });
+        return res.status(404).json({ message: "Hotel not found" });
       }
 
-      await hotel.save();
-      res.status(200).send();
+      return res.status(200).json({ message: "Booking confirmed successfully" });
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "something went wrong" });
+      console.error("Booking creation error:", error);
+      return res.status(500).json({ message: "Something went wrong while booking" });
     }
   }
 );
 
-const constructSearchQuery = (queryParams: any) => {
-  let constructedQuery: any = {};
-
-  if (queryParams.destination) {
-    constructedQuery.$or = [
-      { city: new RegExp(queryParams.destination, "i") },
-      { country: new RegExp(queryParams.destination, "i") },
-    ];
-  }
-
-  if (queryParams.adultCount) {
-    constructedQuery.adultCount = {
-      $gte: parseInt(queryParams.adultCount),
-    };
-  }
-
-  if (queryParams.childCount) {
-    constructedQuery.childCount = {
-      $gte: parseInt(queryParams.childCount),
-    };
-  }
-
-  if (queryParams.facilities) {
-    constructedQuery.facilities = {
-      $all: Array.isArray(queryParams.facilities)
-        ? queryParams.facilities
-        : [queryParams.facilities],
-    };
-  }
-
-  if (queryParams.types) {
-    constructedQuery.type = {
-      $in: Array.isArray(queryParams.types)
-        ? queryParams.types
-        : [queryParams.types],
-    };
-  }
-
-  if (queryParams.stars) {
-    const starRatings = Array.isArray(queryParams.stars)
-      ? queryParams.stars.map((star: string) => parseInt(star))
-      : parseInt(queryParams.stars);
-
-    constructedQuery.starRating = { $in: starRatings };
-  }
-
-  if (queryParams.maxPrice) {
-    constructedQuery.pricePerNight = {
-      $lte: parseInt(queryParams.maxPrice).toString(),
-    };
-  }
-
-  return constructedQuery;
-};
-
-router.get("/", async (req: Request, res: Response) => {
-  try {
-    const hotels = await Hotel.find().sort("-lastUpdated");
-    res.json(hotels);
-  } catch (error) {
-    console.log("error", error);
-    res.status(500).json({ message: "Error fetching hotels" });
-  }
-});
 export default router;

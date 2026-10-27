@@ -27,7 +27,6 @@ const SignIn = () => {
     },
     onError: (error: Error) => {
       showToast({ message: error.message, type: "ERROR" });
-      navigate("/");
     },
   });
   const onSubmit = handleSubmit((data) => {
@@ -35,7 +34,7 @@ const SignIn = () => {
   });
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div className="flex justify-center items-center py-10">
       <div className="flex flex-col shrink-0 w-full max-w-lg shadow-2xl bg-base-100 mx-auto rounded-md">
         <h1 className="text-5xl font-bold mx-auto mt-3">Sign In</h1>
         <form className="card-body" onSubmit={onSubmit}>

@@ -37,13 +37,13 @@ export const SearchContextProvider = ({
       new Date(sessionStorage.getItem("checkOut") || new Date().toISOString())
   );
   const [adultCount, setAdultCount] = useState<number>(() =>
-    parseInt(sessionStorage.getItem("adultCount") || "1")
+    parseInt(sessionStorage.getItem("adultCount") || "1", 10)
   );
   const [childCount, setChildCount] = useState<number>(() =>
-    parseInt(sessionStorage.getItem("childCount") || "1")
+    parseInt(sessionStorage.getItem("childCount") || "0", 10)
   );
   const [hotelId, setHotelId] = useState<string>(
-    () => sessionStorage.getItem("hotelID") || ""
+    () => sessionStorage.getItem("hotelId") || ""
   );
 
   const saveSearchValues = (
@@ -52,7 +52,7 @@ export const SearchContextProvider = ({
     checkOut: Date,
     adultCount: number,
     childCount: number,
-    hotelId?: string //the question mark specifies that it is an optional value 
+    hotelId?: string
   ) => {
     setDestination(destination);
     setCheckIn(checkIn);
@@ -61,6 +61,7 @@ export const SearchContextProvider = ({
     setChildCount(childCount);
     if (hotelId) {
       setHotelId(hotelId);
+      sessionStorage.setItem("hotelId", hotelId);
     }
 
     sessionStorage.setItem("destination", destination);
@@ -68,10 +69,6 @@ export const SearchContextProvider = ({
     sessionStorage.setItem("checkOut", checkOut.toISOString());
     sessionStorage.setItem("adultCount", adultCount.toString());
     sessionStorage.setItem("childCount", childCount.toString());
-
-    if (hotelId) {
-      sessionStorage.setItem("hotelId", hotelId);
-    }
   };
 
   return (
@@ -91,6 +88,7 @@ export const SearchContextProvider = ({
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSearchContext = () => {
   const context = useContext(SearchContext);
   return context as SearchContext;

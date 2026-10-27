@@ -83,20 +83,25 @@ export const signOut = async () => {
   }
 };
 
+type HotelRequestBody = Record<string, unknown> & {
+  facilities: string[];
+  imageUrls: string[];
+};
+
 export const addMyHotel = async (hotelFormData: FormData) => {
-  console.log(hotelFormData);
-  const formDataObject: any = Object.fromEntries(hotelFormData);
+  const formDataObject = Object.fromEntries(hotelFormData) as unknown as HotelRequestBody;
 
   formDataObject.facilities = [];
   formDataObject.imageUrls = [];
 
   for (const [key, value] of hotelFormData.entries()) {
     if (key.startsWith("facilities[")) {
-      formDataObject.facilities.push(value);
+      formDataObject.facilities.push(String(value));
     } else if (key.startsWith("imageUrls[")) {
-      formDataObject.imageUrls.push(value);
+      formDataObject.imageUrls.push(String(value));
     }
   }
+
   const response = await fetch(`${API_BASE_URL}/api/my-hotels`, {
     method: "POST",
     credentials: "include",
@@ -107,7 +112,8 @@ export const addMyHotel = async (hotelFormData: FormData) => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to add hotel");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to add hotel");
   }
 
   return response.json();
@@ -119,7 +125,8 @@ export const fetchMyHotels = async (): Promise<HotelType[]> => {
   });
 
   if (!response.ok) {
-    throw new Error("Error fetching Hotel");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Error fetching Hotel");
   }
 
   return response.json();
@@ -133,24 +140,43 @@ export const fetchMyHotelsById = async (
   });
 
   if (!response.ok) {
-    throw new Error("Error fetching this hotel");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Error fetching this hotel");
   }
 
   return response.json();
 };
 
 export const updateMyHotelById = async (hotelFormData: FormData) => {
+  const hotelId = hotelFormData.get("hotelId");
+  const formDataObject = Object.fromEntries(hotelFormData) as unknown as HotelRequestBody;
+
+  formDataObject.facilities = [];
+  formDataObject.imageUrls = [];
+
+  for (const [key, value] of hotelFormData.entries()) {
+    if (key.startsWith("facilities[")) {
+      formDataObject.facilities.push(String(value));
+    } else if (key.startsWith("imageUrls[")) {
+      formDataObject.imageUrls.push(String(value));
+    }
+  }
+
   const response = await fetch(
-    `${API_BASE_URL}/api/my-hotels/${hotelFormData.get("hotelId")}`,
+    `${API_BASE_URL}/api/my-hotels/${hotelId}`,
     {
       method: "PUT",
-      body: hotelFormData,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formDataObject),
       credentials: "include",
     }
   );
 
   if (!response.ok) {
-    throw new Error("Failed to update Hotel");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to update Hotel");
   }
 
   return response.json();
@@ -196,7 +222,8 @@ export const searchHotels = async (
   );
 
   if (!response.ok) {
-    throw new Error("Error fetching hotels");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Error fetching hotels");
   }
 
   return response.json();
@@ -205,7 +232,8 @@ export const searchHotels = async (
 export const fetchHotelById = async (hotelId: string): Promise<HotelType> => {
   const response = await fetch(`${API_BASE_URL}/api/hotels/${hotelId}`);
   if (!response.ok) {
-    throw new Error("Error fetching Hotels");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Error fetching Hotel");
   }
 
   return response.json();
@@ -225,7 +253,8 @@ export const createRoomBooking = async (formData: BookingFormData) => {
   );
 
   if (!response.ok) {
-    throw new Error("Error booking room");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Error booking room");
   }
 };
 
@@ -235,7 +264,8 @@ export const fetchMyBookings = async (): Promise<HotelType[]> => {
   });
 
   if (!response.ok) {
-    throw new Error("Unable to fetch bookings");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Unable to fetch bookings");
   }
 
   return response.json();
@@ -258,7 +288,8 @@ export const createPaymentIntent = async (
   );
 
   if (!response.ok) {
-    throw new Error("Error fetching payment intent");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Error creating payment intent");
   }
 
   return response.json();
@@ -267,7 +298,8 @@ export const createPaymentIntent = async (
 export const fetchHotels = async (): Promise<HotelType[]> => {
   const response = await fetch(`${API_BASE_URL}/api/hotels`);
   if (!response.ok) {
-    throw new Error("Error fetching hotels");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Error fetching hotels");
   }
   return response.json();
 };

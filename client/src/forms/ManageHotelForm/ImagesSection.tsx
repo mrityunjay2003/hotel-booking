@@ -52,8 +52,9 @@ const ImagesSection = () => {
           className={`input input-bordered ${errors.imageFiles ? 'input-error' : ''}`}
           {...register("imageFiles", {
             validate: (imageFiles) => {
-              const totalLength =
-                imageFiles.length + (existingImageUrls?.length || 0);
+              const newFilesCount = imageFiles ? imageFiles.length : 0;
+              const existingCount = existingImageUrls?.length || 0;
+              const totalLength = newFilesCount + existingCount;
 
               if (totalLength === 0) {
                 return "At least one image should be added";

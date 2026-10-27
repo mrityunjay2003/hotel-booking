@@ -15,6 +15,7 @@ type ToastMessage = {
 type AppContext = {
   showToast: (toastMessage: ToastMessage) => void;
   isLoggedIn: boolean;
+  isLoadingAuth: boolean;
   stripePromise: Promise<Stripe | null>;
 };
 
@@ -28,16 +29,18 @@ export const AppContextProvider = ({
 }) => {
   const [toast, setToast] = useState<ToastMessage | undefined>(undefined);
 
-  const { isError } = useQuery("validateToken", apiClient.validateToken, {
+  const { isError, isLoading } = useQuery("validateToken", apiClient.validateToken, {
     retry: false,
   });
+
   return (
     <AppContext.Provider
       value={{
         showToast: (toastMessage) => {
           setToast(toastMessage);
         },
-        isLoggedIn: !isError,
+        isLoggedIn: !isError && !isLoading,
+        isLoadingAuth: isLoading,
         stripePromise,
       }}
     >
@@ -53,6 +56,7 @@ export const AppContextProvider = ({
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAppContext = () => {
   const context = useContext(AppContext);
   return context as AppContext;

@@ -43,7 +43,9 @@ const ManageHotelForm = ({ onSave, isLoading, hotel }: Props) => {
   const uploadImagesToFirebase = async (imageFiles: FileList) => {
     const uploadedUrls: string[] = [];
     for (const file of Array.from(imageFiles)) {
-      const storageRef = ref(storage, `images/${file.name}`);
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${sanitizedName}`;
+      const storageRef = ref(storage, `images/${uniqueFileName}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
       uploadedUrls.push(downloadURL);
@@ -70,20 +72,26 @@ const ManageHotelForm = ({ onSave, isLoading, hotel }: Props) => {
       formData.append(`facilities[${index}]`, facility);
     });
 
+    let allImageUrls: string[] = [];
+
+    // Keep existing images that weren't deleted
+    if (formDataJson.imageUrls && formDataJson.imageUrls.length > 0) {
+      allImageUrls = [...formDataJson.imageUrls];
+    }
+
+    // Upload newly added image files
     if (formDataJson.imageFiles && formDataJson.imageFiles.length > 0) {
       try {
-        const imageUrls = await uploadImagesToFirebase(formDataJson.imageFiles);
-        imageUrls.forEach((url, index) => {
-          formData.append(`imageUrls[${index}]`, url);
-        });
+        const uploadedUrls = await uploadImagesToFirebase(formDataJson.imageFiles);
+        allImageUrls = [...allImageUrls, ...uploadedUrls];
       } catch (error) {
         console.error("Error uploading images:", error);
       }
-    } else {
-      formDataJson.imageUrls.forEach((url, index) => {
-        formData.append(`imageUrls[${index}]`, url);
-      });
     }
+
+    allImageUrls.forEach((url, index) => {
+      formData.append(`imageUrls[${index}]`, url);
+    });
 
     onSave(formData);
   });

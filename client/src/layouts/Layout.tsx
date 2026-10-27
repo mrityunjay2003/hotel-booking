@@ -1,21 +1,22 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-// import Hero from "../components/Hero";
 import SearchBar from "../components/SearchBar";
 
 interface Props {
   children: React.ReactNode;
+  showSearchBar?: boolean;
 }
 
-const Layout = ({ children }: Props) => {
+const Layout = ({ children, showSearchBar = true }: Props) => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
       <Header />
-      {/* <Hero /> */}
-      <div className="container mx-auto">
-        <SearchBar />
-      </div>
-      <div className="container mx-auto py-10 flex-1">{children}</div>
+      {showSearchBar && (
+        <div className="container mx-auto px-4">
+          <SearchBar />
+        </div>
+      )}
+      <main className="container mx-auto px-4 py-8 flex-1">{children}</main>
       <Footer />
     </div>
   );

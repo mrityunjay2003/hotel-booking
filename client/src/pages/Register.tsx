@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "react-query";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import * as apiClient from "../api-client";
 import { useAppContext } from "../contexts/AppContext";
 
@@ -40,7 +40,7 @@ const Register = () => {
   });
 
   return (
-    <div className="hero min-h-screen">
+    <div className="hero py-10">
       <div className="hero-content flex-col lg:flex-row-reverse">
         <div className="text-center lg:text-left">
           <h1 className="text-5xl font-bold">Create an Account!</h1>
@@ -148,9 +148,9 @@ const Register = () => {
                 </span>
               )}
               <label className="label">
-                <a href="#" className="label-text-alt link link-hover">
+                <Link to="/sign-in" className="label-text-alt link link-hover">
                   Already Registered? Sign in here
-                </a>
+                </Link>
               </label>
             </div>
             <div className="form-control mt-6">

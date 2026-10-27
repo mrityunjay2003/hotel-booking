@@ -1,8 +1,9 @@
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { StripeCardElement } from "@stripe/stripe-js";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "react-query";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   PaymentIntentResponse,
   UserType,
@@ -35,15 +36,18 @@ const BookingForm = ({ currentUser, paymentIntent }: Props) => {
   const stripe = useStripe();
   const elements = useElements();
   const { showToast } = useAppContext();
+  const navigate = useNavigate();
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  const { mutate: bookRoom, isLoading } = useMutation(
+  const { mutate: bookRoom, isLoading: isBookingLoading } = useMutation(
     apiClient.createRoomBooking,
     {
       onSuccess: () => {
-        showToast({ message: "Booking Saved!", type: "SUCCESS" });
+        showToast({ message: "Booking Confirmed Successfully!", type: "SUCCESS" });
+        navigate("/my-bookings");
       },
-      onError: () => {
-        showToast({ message: "Error saving booking", type: "ERROR" });
+      onError: (error: Error) => {
+        showToast({ message: error.message || "Error saving booking", type: "ERROR" });
       },
     }
   );
@@ -65,19 +69,46 @@ const BookingForm = ({ currentUser, paymentIntent }: Props) => {
 
   const onSubmit = async (formData: BookingFormData) => {
     if (!stripe || !elements) {
+      showToast({ message: "Payment service unavailable", type: "ERROR" });
       return;
     }
 
-    const result = await stripe.confirmCardPayment(paymentIntent.clientSecret, {
-      payment_method: {
-        card: elements.getElement(CardElement) as StripeCardElement,
-      },
-    });
+    setIsProcessingPayment(true);
 
-    if (result.paymentIntent?.status === "succeeded") {
-      bookRoom({ ...formData, paymentIntentId: result.paymentIntent.id });
+    try {
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) {
+        showToast({ message: "Please enter your card details", type: "ERROR" });
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      const result = await stripe.confirmCardPayment(paymentIntent.clientSecret, {
+        payment_method: {
+          card: cardElement as StripeCardElement,
+        },
+      });
+
+      if (result.error) {
+        showToast({ message: result.error.message || "Payment declined", type: "ERROR" });
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      if (result.paymentIntent?.status === "succeeded") {
+        bookRoom({ ...formData, paymentIntentId: result.paymentIntent.id });
+      } else {
+        showToast({ message: "Payment was not completed", type: "ERROR" });
+        setIsProcessingPayment(false);
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+      showToast({ message: "An unexpected error occurred during payment", type: "ERROR" });
+      setIsProcessingPayment(false);
     }
   };
+
+  const isSubmitting = isProcessingPayment || isBookingLoading;
 
   return (
     <form
@@ -85,7 +116,7 @@ const BookingForm = ({ currentUser, paymentIntent }: Props) => {
       className="grid grid-cols-1 gap-5 rounded-lg border border-slate-300 p-5"
     >
       <span className="text-3xl font-bold">Confirm Your Details</span>
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <label className="text-gray-700 text-sm font-bold flex-1">
           First Name
           <input
@@ -106,7 +137,7 @@ const BookingForm = ({ currentUser, paymentIntent }: Props) => {
             {...register("lastName")}
           />
         </label>
-        <label className="text-gray-700 text-sm font-bold flex-1">
+        <label className="text-gray-700 text-sm font-bold md:col-span-2">
           Email
           <input
             className="mt-1 border rounded w-full py-2 px-3 text-gray-700 bg-gray-200 font-normal"
@@ -133,17 +164,17 @@ const BookingForm = ({ currentUser, paymentIntent }: Props) => {
         <h3 className="text-xl font-semibold"> Payment Details</h3>
         <CardElement
           id="payment-element"
-          className="border rounded-md p-2 text-sm"
+          className="border rounded-md p-2 text-sm bg-white"
         />
       </div>
 
       <div className="flex justify-end">
         <button
-          disabled={isLoading}
+          disabled={isSubmitting}
           type="submit"
-          className="bg-blue-600 text-white p-2 font-bold hover:bg-blue-500 text-md disabled:bg-gray-500"
+          className="bg-blue-600 text-white p-2 font-bold hover:bg-blue-500 text-md disabled:bg-gray-500 rounded"
         >
-          {isLoading ? "Saving..." : "Confirm Booking"}
+          {isSubmitting ? "Processing..." : "Confirm Booking"}
         </button>
       </div>
     </form>
